@@ -84,7 +84,7 @@ page = st.sidebar.radio(
 st.sidebar.markdown("---")
 st.sidebar.markdown("**Project:** AI Driven Business Risk Intelligence")
 
-st.sidebar.markdown("**Version:** 1.0.0")
+
 
 # Load everything
 df = load_data()
@@ -282,18 +282,42 @@ elif page == "🔮 Churn Prediction":
     st.markdown("Predict customer churn across 30, 60, and 90 day horizons")
     st.markdown("---")
     
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.subheader("📊 30-Day Churn Distribution")
-        fig1 = px.histogram(
+    col1, col2, col3 = st.columns(3)
+
+with col1:
+    st.subheader("📊 30-Day")
+    fig1 = px.histogram(
+        df, x='churn_prob_30day', nbins=25,
+        color_discrete_sequence=['#FF4B4B'],
+        title="30-Day Churn Probability"
+    )
+    st.plotly_chart(fig1, use_container_width=True)
+
+with col2:
+    st.subheader("📊 60-Day")
+    fig2 = px.histogram(
+        df, x='churn_prob_60day', nbins=25,
+        color_discrete_sequence=['#FF8C00'],
+        title="60-Day Churn Probability"
+    )
+    st.plotly_chart(fig2, use_container_width=True)
+
+with col3:
+    st.subheader("📊 90-Day")
+    fig3 = px.histogram(
+        df, x='churn_prob_90day', nbins=25,
+        color_discrete_sequence=['#00CC00'],
+        title="90-Day Churn Probability"
+    )
+    st.plotly_chart(fig3, use_container_width=True)
+fig1 = px.histogram(
             df, x='churn_prob_30day', nbins=25,
             color_discrete_sequence=['#FF4B4B'],
             title="30-Day Churn Probability"
         )
-        st.plotly_chart(fig1, use_container_width=True)
+st.plotly_chart(fig1, use_container_width=True)
     
-    with col2:
+with col2:
         st.subheader("📊 90-Day Churn Distribution")
         fig3 = px.histogram(
             df, x='churn_prob_90day', nbins=25,
@@ -301,12 +325,11 @@ elif page == "🔮 Churn Prediction":
             title="90-Day Churn Probability"
         )
         st.plotly_chart(fig3, use_container_width=True)
-    
-    st.markdown("---")
+st.markdown("---")
     
     # Triple horizon comparison
-    st.subheader("📈 Triple Horizon Comparison")
-    horizon_data = pd.DataFrame({
+st.subheader("📈 Triple Horizon Comparison")
+horizon_data = pd.DataFrame({
         'Horizon': ['30 Days', '60 Days', '90 Days'],
         'Avg Churn Risk': [
             df['churn_prob_30day'].mean(),
@@ -320,7 +343,7 @@ elif page == "🔮 Churn Prediction":
         ]
     })
     
-    fig_horizon = px.bar(
+fig_horizon = px.bar(
         horizon_data,
         x='Horizon',
         y='High Risk Count',
@@ -329,20 +352,20 @@ elif page == "🔮 Churn Prediction":
         text='High Risk Count',
         title="High Risk Customers Across Time Horizons"
     )
-    st.plotly_chart(fig_horizon, use_container_width=True)
+st.plotly_chart(fig_horizon, use_container_width=True)
     
-    st.markdown("---")
+st.markdown("---")
     
     # Individual customer lookup
-    st.subheader("🔍 Look Up Individual Customer")
-    customer_id = st.number_input(
+st.subheader("🔍 Look Up Individual Customer")
+customer_id = st.number_input(
         "Enter Customer Index",
         min_value=0,
         max_value=len(df)-1,
         value=0
     )
     
-    if st.button("🔮 Predict Churn Risk"):
+if st.button("🔮 Predict Churn Risk"):
         customer = df.iloc[customer_id]
         
         col3, col4, col5 = st.columns(3)
