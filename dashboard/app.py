@@ -8,7 +8,6 @@ import os
 import warnings
 warnings.filterwarnings('ignore')
 
-# Page config
 st.set_page_config(
     page_title="AI Business Risk Intelligence",
     page_icon="🚨",
@@ -16,11 +15,9 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Base path
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MODEL_PATH = os.path.join(BASE, "models_saved")
 
-# Custom CSS
 st.markdown("""
 <style>
     .main-header {
@@ -32,32 +29,18 @@ st.markdown("""
     }
     .sub-header {
         font-size: 1.2rem;
-        color: #666;
+        color: #aaa;
         text-align: center;
         margin-bottom: 30px;
     }
-    .metric-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 20px;
-        border-radius: 10px;
-        color: white;
-        text-align: center;
-    }
-    .risk-critical { color: #FF0000; font-weight: bold; }
-    .risk-high     { color: #FF6600; font-weight: bold; }
-    .risk-medium   { color: #FFB300; font-weight: bold; }
-    .risk-low      { color: #00CC00; font-weight: bold; }
 </style>
 """, unsafe_allow_html=True)
 
-# Load data
 @st.cache_data
 def load_data():
     path = os.path.join(BASE, "data", "processed", "telco_with_predictions.csv")
-    df = pd.read_csv(path)
-    return df
+    return pd.read_csv(path)
 
-# Load models
 @st.cache_resource
 def load_models():
     m30 = joblib.load(os.path.join(MODEL_PATH, "churn_30day.pkl"))
@@ -83,10 +66,8 @@ page = st.sidebar.radio(
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("**Project:** AI Driven Business Risk Intelligence")
+st.sidebar.markdown("**Version:** 1.0.0")
 
-
-
-# Load everything
 df = load_data()
 m30, m60, m90, scaler = load_models()
 
@@ -94,32 +75,26 @@ m30, m60, m90, scaler = load_models()
 # PAGE 1 — HOME DASHBOARD
 # ============================================================
 if page == "🏠 Home Dashboard":
-    
-    st.markdown('<p class="main-header">🚨 AI Driven Business Risk Intelligence</p>', 
+
+    st.markdown('<p class="main-header">🚨 AI Driven Business Risk Intelligence</p>',
                 unsafe_allow_html=True)
-    st.markdown('<p class="sub-header">Customer Risk Assessment & Churn Prediction Platform</p>', 
+    st.markdown('<p class="sub-header">Customer Risk Assessment & Churn Prediction Platform</p>',
                 unsafe_allow_html=True)
-    
     st.markdown("---")
-    
-    # KPI Cards Row 1
-    col1, col2, col3, col4 = st.columns(4)
-    
+
     total = len(df)
     critical = len(df[df['churn_prob_30day'] >= 75])
     high = len(df[(df['churn_prob_30day'] >= 50) & (df['churn_prob_30day'] < 75)])
     avg_churn = df['churn_prob_30day'].mean()
-    
-    col1.metric("👥 Total Customers", f"{total:,}", "All Customers")
+
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("👥 Total Customers", f"{total:,}")
     col2.metric("🔴 Critical Risk", f"{critical:,}", f"{critical/total*100:.1f}% of total")
     col3.metric("🟠 High Risk", f"{high:,}", f"{high/total*100:.1f}% of total")
     col4.metric("📊 Avg Churn Risk", f"{avg_churn:.1f}%", "30-day average")
-    
+
     st.markdown("---")
-    
-    # Revenue KPIs
-    col5, col6, col7 = st.columns(3)
-    
+
     if 'MonthlyCharges' in df.columns:
         total_revenue = df['MonthlyCharges'].sum() * 12
         at_risk_revenue = df[df['churn_prob_30day'] >= 50]['MonthlyCharges'].sum() * 12
@@ -128,16 +103,16 @@ if page == "🏠 Home Dashboard":
         total_revenue = total * 65 * 12
         at_risk_revenue = (critical + high) * 65 * 12
         safe_revenue = total_revenue - at_risk_revenue
-    
+
+    col5, col6, col7 = st.columns(3)
     col5.metric("💵 Total Annual Revenue", f"₹{total_revenue:,.0f}")
-    col6.metric("⚠️ Revenue at Risk", f"₹{at_risk_revenue:,.0f}", "High+Critical customers")
-    col7.metric("✅ Safe Revenue", f"₹{safe_revenue:,.0f}", "Low+Medium customers")
-    
+    col6.metric("⚠️ Revenue at Risk", f"₹{at_risk_revenue:,.0f}")
+    col7.metric("✅ Safe Revenue", f"₹{safe_revenue:,.0f}")
+
     st.markdown("---")
-    
-    # Charts Row
+
     col8, col9 = st.columns(2)
-    
+
     with col8:
         st.subheader("📊 Customer Risk Distribution")
         risk_counts = {
@@ -157,8 +132,8 @@ if page == "🏠 Home Dashboard":
             },
             hole=0.4
         )
-        st.plotly_chart(fig_pie, use_container_width=True)
-    
+        st.plotly_chart(fig_pie, use_container_width=True, key="home_pie")
+
     with col9:
         st.subheader("📈 Churn Probability Distribution")
         fig_hist = px.histogram(
@@ -173,11 +148,9 @@ if page == "🏠 Home Dashboard":
         fig_hist.add_vline(x=75, line_dash="dash",
                            line_color="red",
                            annotation_text="Critical Threshold")
-        st.plotly_chart(fig_hist, use_container_width=True)
-    
+        st.plotly_chart(fig_hist, use_container_width=True, key="home_hist")
+
     st.markdown("---")
-    
-    # Top 10 High Risk Table
     st.subheader("🔴 Top 10 Highest Risk Customers — Immediate Action Required!")
     top10 = df.nlargest(10, 'churn_prob_30day')[
         ['churn_prob_30day', 'churn_prob_60day',
@@ -191,14 +164,13 @@ if page == "🏠 Home Dashboard":
 # PAGE 2 — RISK ASSESSMENT
 # ============================================================
 elif page == "⚠️ Risk Assessment":
-    
+
     st.title("⚠️ Customer Risk Assessment")
     st.markdown("Analyze and filter customers by their risk level")
     st.markdown("---")
-    
-    # Filters
+
     col1, col2, col3 = st.columns(3)
-    
+
     with col1:
         risk_filter = st.selectbox(
             "Filter by Risk Level",
@@ -207,17 +179,14 @@ elif page == "⚠️ Risk Assessment":
              "🟡 Medium (25-50%)",
              "🟢 Low (<25%)"]
         )
-    
     with col2:
         sort_by = st.selectbox(
             "Sort by",
             ["churn_prob_30day", "churn_prob_60day", "churn_prob_90day"]
         )
-    
     with col3:
         show_rows = st.slider("Show rows", 10, 100, 20)
-    
-    # Apply filter
+
     filtered_df = df.copy()
     if risk_filter == "🔴 Critical (75%+)":
         filtered_df = df[df['churn_prob_30day'] >= 75]
@@ -227,21 +196,19 @@ elif page == "⚠️ Risk Assessment":
         filtered_df = df[(df['churn_prob_30day'] >= 25) & (df['churn_prob_30day'] < 50)]
     elif risk_filter == "🟢 Low (<25%)":
         filtered_df = df[df['churn_prob_30day'] < 25]
-    
+
     filtered_df = filtered_df.sort_values(sort_by, ascending=False).head(show_rows)
-    
-    # Stats
+
     col4, col5, col6 = st.columns(3)
     col4.metric("Customers Shown", len(filtered_df))
     col5.metric("Avg Risk Score", f"{filtered_df['churn_prob_30day'].mean():.1f}%")
     if 'MonthlyCharges' in filtered_df.columns:
         col6.metric("Revenue at Risk", f"₹{filtered_df['MonthlyCharges'].sum()*12:,.0f}")
-    
+
     st.markdown("---")
-    
-    # Risk scatter plot
-    st.subheader("📊 Risk Score vs Monthly Charges")
+
     if 'MonthlyCharges' in df.columns:
+        st.subheader("📊 Risk Score vs Monthly Charges")
         fig_scatter = px.scatter(
             filtered_df,
             x='MonthlyCharges',
@@ -259,15 +226,14 @@ elif page == "⚠️ Risk Assessment":
                 'churn_prob_30day': 'Churn Risk (%)'
             }
         )
-        st.plotly_chart(fig_scatter, use_container_width=True)
-    
+        st.plotly_chart(fig_scatter, use_container_width=True, key="risk_scatter")
+
     st.markdown("---")
     st.subheader("📋 Customer Risk Table")
     display_cols = ['churn_prob_30day', 'churn_prob_60day',
                     'churn_prob_90day', 'churn_risk']
     if 'MonthlyCharges' in df.columns:
         display_cols = ['MonthlyCharges'] + display_cols
-    
     st.dataframe(
         filtered_df[display_cols].reset_index(),
         use_container_width=True
@@ -277,59 +243,49 @@ elif page == "⚠️ Risk Assessment":
 # PAGE 3 — CHURN PREDICTION
 # ============================================================
 elif page == "🔮 Churn Prediction":
-    
+
     st.title("🔮 Triple Horizon Churn Prediction")
-    st.markdown("Predict customer churn across 30, 60, and 90 day horizons")
+    st.markdown("Predict customer churn across **30, 60, and 90 day** horizons")
     st.markdown("---")
-    
+
+    # All 3 charts side by side
     col1, col2, col3 = st.columns(3)
 
-with col1:
-    st.subheader("📊 30-Day")
-    fig1 = px.histogram(
-        df, x='churn_prob_30day', nbins=25,
-        color_discrete_sequence=['#FF4B4B'],
-        title="30-Day Churn Probability"
-    )
-    st.plotly_chart(fig1, use_container_width=True)
-
-with col2:
-    st.subheader("📊 60-Day")
-    fig2 = px.histogram(
-        df, x='churn_prob_60day', nbins=25,
-        color_discrete_sequence=['#FF8C00'],
-        title="60-Day Churn Probability"
-    )
-    st.plotly_chart(fig2, use_container_width=True)
-
-with col3:
-    st.subheader("📊 90-Day")
-    fig3 = px.histogram(
-        df, x='churn_prob_90day', nbins=25,
-        color_discrete_sequence=['#00CC00'],
-        title="90-Day Churn Probability"
-    )
-    st.plotly_chart(fig3, use_container_width=True)
-fig1 = px.histogram(
-            df, x='churn_prob_30day', nbins=25,
+    with col1:
+        st.subheader("📊 30-Day")
+        fig1 = px.histogram(
+            df, x='churn_prob_30day',
+            nbins=25,
             color_discrete_sequence=['#FF4B4B'],
             title="30-Day Churn Probability"
         )
-st.plotly_chart(fig1, use_container_width=True)
-    
-with col2:
-        st.subheader("📊 90-Day Churn Distribution")
+        st.plotly_chart(fig1, use_container_width=True, key="churn_30_hist")
+
+    with col2:
+        st.subheader("📊 60-Day")
+        fig2 = px.histogram(
+            df, x='churn_prob_60day',
+            nbins=25,
+            color_discrete_sequence=['#FF8C00'],
+            title="60-Day Churn Probability"
+        )
+        st.plotly_chart(fig2, use_container_width=True, key="churn_60_hist")
+
+    with col3:
+        st.subheader("📊 90-Day")
         fig3 = px.histogram(
-            df, x='churn_prob_90day', nbins=25,
+            df, x='churn_prob_90day',
+            nbins=25,
             color_discrete_sequence=['#00CC00'],
             title="90-Day Churn Probability"
         )
-        st.plotly_chart(fig3, use_container_width=True)
-st.markdown("---")
-    
-    # Triple horizon comparison
-st.subheader("📈 Triple Horizon Comparison")
-horizon_data = pd.DataFrame({
+        st.plotly_chart(fig3, use_container_width=True, key="churn_90_hist")
+
+    st.markdown("---")
+
+    # Triple horizon comparison bar chart
+    st.subheader("📈 Triple Horizon Comparison")
+    horizon_data = pd.DataFrame({
         'Horizon': ['30 Days', '60 Days', '90 Days'],
         'Avg Churn Risk': [
             df['churn_prob_30day'].mean(),
@@ -342,8 +298,8 @@ horizon_data = pd.DataFrame({
             len(df[df['churn_prob_90day'] >= 50])
         ]
     })
-    
-fig_horizon = px.bar(
+
+    fig_horizon = px.bar(
         horizon_data,
         x='Horizon',
         y='High Risk Count',
@@ -352,28 +308,27 @@ fig_horizon = px.bar(
         text='High Risk Count',
         title="High Risk Customers Across Time Horizons"
     )
-st.plotly_chart(fig_horizon, use_container_width=True)
-    
-st.markdown("---")
-    
+    st.plotly_chart(fig_horizon, use_container_width=True, key="horizon_bar")
+
+    st.markdown("---")
+
     # Individual customer lookup
-st.subheader("🔍 Look Up Individual Customer")
-customer_id = st.number_input(
+    st.subheader("🔍 Look Up Individual Customer")
+    customer_id = st.number_input(
         "Enter Customer Index",
         min_value=0,
         max_value=len(df)-1,
         value=0
     )
-    
-if st.button("🔮 Predict Churn Risk"):
+
+    if st.button("🔮 Predict Churn Risk"):
         customer = df.iloc[customer_id]
-        
-        col3, col4, col5 = st.columns(3)
-        col3.metric("30-Day Risk", f"{customer['churn_prob_30day']:.1f}%")
-        col4.metric("60-Day Risk", f"{customer['churn_prob_60day']:.1f}%")
-        col5.metric("90-Day Risk", f"{customer['churn_prob_90day']:.1f}%")
-        
-        # Risk gauge
+
+        col4, col5, col6 = st.columns(3)
+        col4.metric("30-Day Risk", f"{customer['churn_prob_30day']:.1f}%")
+        col5.metric("60-Day Risk", f"{customer['churn_prob_60day']:.1f}%")
+        col6.metric("90-Day Risk", f"{customer['churn_prob_90day']:.1f}%")
+
         fig_gauge = go.Figure(go.Indicator(
             mode="gauge+number+delta",
             value=customer['churn_prob_30day'],
@@ -395,19 +350,19 @@ if st.button("🔮 Predict Churn Risk"):
                 }
             }
         ))
-        st.plotly_chart(fig_gauge, use_container_width=True)
+        st.plotly_chart(fig_gauge, use_container_width=True, key="customer_gauge")
 
 # ============================================================
 # PAGE 4 — WHAT-IF SIMULATOR
 # ============================================================
 elif page == "🎮 What-If Simulator":
-    
+
     st.title("🎮 What-If Action Simulator")
     st.markdown("Simulate business actions and see predicted impact on churn")
     st.markdown("---")
-    
+
     col1, col2 = st.columns(2)
-    
+
     with col1:
         customer_id = st.number_input(
             "Select Customer",
@@ -415,14 +370,13 @@ elif page == "🎮 What-If Simulator":
             max_value=len(df)-1,
             value=int(df['churn_prob_30day'].idxmax())
         )
-    
     with col2:
         action = st.selectbox(
             "Select Action to Simulate",
             ["discount_10", "discount_20", "discount_30",
              "upgrade", "support", "loyalty", "all"]
         )
-    
+
     action_names = {
         'discount_10': '10% Discount',
         'discount_20': '20% Discount',
@@ -432,21 +386,20 @@ elif page == "🎮 What-If Simulator":
         'loyalty': 'Give Loyalty Rewards',
         'all': 'Complete Retention Package'
     }
-    
+
     reductions = {
         'discount_10': 8, 'discount_20': 18,
         'discount_30': 28, 'upgrade': 22,
         'support': 15, 'loyalty': 12, 'all': 45
     }
-    
+
     costs = {
         'discount_10': 50, 'discount_20': 100,
         'discount_30': 150, 'upgrade': 500,
         'support': 200, 'loyalty': 150, 'all': 800
     }
-    
+
     if st.button("🚀 Run Simulation"):
-        
         customer = df.iloc[customer_id]
         orig_prob = customer['churn_prob_30day']
         new_prob = max(orig_prob - reductions[action], 2)
@@ -454,22 +407,20 @@ elif page == "🎮 What-If Simulator":
         annual = monthly * 12
         cost = costs[action]
         saved = annual - cost
-        
+
         st.markdown("---")
         st.subheader("📊 Simulation Results")
-        
+
         col3, col4, col5 = st.columns(3)
         col3.metric("Before Action", f"{orig_prob:.1f}%", "Churn Risk")
         col4.metric("After Action", f"{new_prob:.1f}%",
                     f"-{orig_prob-new_prob:.1f}% improvement")
-        col5.metric("Revenue Saved", f"₹{saved:.0f}",
-                    "After deducting action cost")
-        
+        col5.metric("Revenue Saved", f"₹{saved:.0f}")
+
         st.markdown("---")
-        
-        # Before vs After gauge
+
         col6, col7 = st.columns(2)
-        
+
         with col6:
             fig_before = go.Figure(go.Indicator(
                 mode="gauge+number",
@@ -486,8 +437,8 @@ elif page == "🎮 What-If Simulator":
                     ]
                 }
             ))
-            st.plotly_chart(fig_before, use_container_width=True)
-        
+            st.plotly_chart(fig_before, use_container_width=True, key="gauge_before")
+
         with col7:
             fig_after = go.Figure(go.Indicator(
                 mode="gauge+number",
@@ -504,30 +455,28 @@ elif page == "🎮 What-If Simulator":
                     ]
                 }
             ))
-            st.plotly_chart(fig_after, use_container_width=True)
-        
-        # Recommendation
+            st.plotly_chart(fig_after, use_container_width=True, key="gauge_after")
+
         st.markdown("---")
         if saved > 0:
             st.success(f"✅ RECOMMENDED: Take this action! Saves ₹{saved:.0f} annually!")
         else:
-            st.error(f"❌ NOT RECOMMENDED: Action costs more than revenue gained!")
+            st.error(f"❌ NOT RECOMMENDED: Action costs more than revenue!")
 
 # ============================================================
 # PAGE 5 — REVENUE IMPACT
 # ============================================================
 elif page == "💰 Revenue Impact":
-    
+
     st.title("💰 Revenue at Risk Calculator")
-    st.markdown("Calculate potential revenue loss and savings from retention")
+    st.markdown("Calculate potential revenue loss and savings")
     st.markdown("---")
-    
-    # Revenue calculations
+
     critical = df[df['churn_prob_30day'] >= 75]
     high = df[(df['churn_prob_30day'] >= 50) & (df['churn_prob_30day'] < 75)]
     medium = df[(df['churn_prob_30day'] >= 25) & (df['churn_prob_30day'] < 50)]
     low = df[df['churn_prob_30day'] < 25]
-    
+
     if 'MonthlyCharges' in df.columns:
         crit_rev = critical['MonthlyCharges'].sum() * 12
         high_rev = high['MonthlyCharges'].sum() * 12
@@ -539,40 +488,31 @@ elif page == "💰 Revenue Impact":
         high_rev = len(high) * avg * 12
         med_rev = len(medium) * avg * 12
         total_risk = crit_rev + high_rev
-    
-    # KPIs
+
     col1, col2, col3, col4 = st.columns(4)
     col1.metric("🔴 Critical Revenue Risk", f"₹{crit_rev:,.0f}")
     col2.metric("🟠 High Revenue Risk", f"₹{high_rev:,.0f}")
     col3.metric("🟡 Medium Revenue Risk", f"₹{med_rev:,.0f}")
     col4.metric("⚠️ Total at Risk", f"₹{total_risk:,.0f}")
-    
+
     st.markdown("---")
-    
-    # Retention scenario slider
+
     st.subheader("🎯 Retention Scenario Calculator")
     retention_rate = st.slider(
         "If we retain this % of high risk customers:",
         min_value=10, max_value=100, value=50, step=10
     )
-    
+
     saved = total_risk * (retention_rate / 100)
-    
+
     col5, col6 = st.columns(2)
-    col5.metric(
-        f"Revenue Saved ({retention_rate}% retention)",
-        f"₹{saved:,.0f}"
-    )
-    col6.metric(
-        "Still at Risk",
-        f"₹{total_risk - saved:,.0f}"
-    )
-    
+    col5.metric(f"Revenue Saved ({retention_rate}% retention)", f"₹{saved:,.0f}")
+    col6.metric("Still at Risk", f"₹{total_risk - saved:,.0f}")
+
     st.markdown("---")
-    
-    # Revenue charts
+
     col7, col8 = st.columns(2)
-    
+
     with col7:
         st.subheader("Revenue at Risk by Category")
         rev_data = pd.DataFrame({
@@ -589,8 +529,8 @@ elif page == "💰 Revenue Impact":
             texttemplate='₹%{text:,.0f}',
             textposition='outside'
         )
-        st.plotly_chart(fig_rev, use_container_width=True)
-    
+        st.plotly_chart(fig_rev, use_container_width=True, key="revenue_bar")
+
     with col8:
         st.subheader("Retention Impact Scenarios")
         scenarios = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
@@ -606,16 +546,20 @@ elif page == "💰 Revenue Impact":
             line_color="red",
             annotation_text=f"Current: {retention_rate}%"
         )
-        st.plotly_chart(fig_scen, use_container_width=True)
-    
+        st.plotly_chart(fig_scen, use_container_width=True, key="revenue_line")
+
     st.markdown("---")
     st.subheader("📋 Action Plan for Maximum Revenue Recovery")
-    
+
     action_plan = pd.DataFrame({
         'Priority': ['1st', '2nd', '3rd'],
         'Target Segment': ['Critical Risk', 'High Risk', 'Medium Risk'],
         'Customers': [len(critical), len(high), len(medium)],
-        'Revenue at Risk': [f'₹{crit_rev:,.0f}', f'₹{high_rev:,.0f}', f'₹{med_rev:,.0f}'],
+        'Revenue at Risk': [
+            f'₹{crit_rev:,.0f}',
+            f'₹{high_rev:,.0f}',
+            f'₹{med_rev:,.0f}'
+        ],
         'Recommended Action': [
             'Personal call + 30% discount',
             'Email offer + 20% discount',
@@ -623,5 +567,5 @@ elif page == "💰 Revenue Impact":
         ],
         'Timeline': ['Today', 'Within 3 days', 'Within 1 week']
     })
-    
+
     st.dataframe(action_plan, use_container_width=True)
