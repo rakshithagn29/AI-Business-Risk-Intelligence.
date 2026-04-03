@@ -1,46 +1,27 @@
-# Data Processing
 pandas
 numpy
 scipy
-
-# Machine Learning
 scikit-learn
 xgboost
 imbalanced-learn
 lightgbm
-
-# Explainable AI
 shap
 lime
-
-# NLP and Sentiment Analysis
 nltk
 textblob
-
-# Visualization
 matplotlib
 seaborn
 plotly
 wordcloud
-
-# Backend API
 fastapi
 uvicorn
 pydantic
-
-# Dashboard
 streamlit
-
-# Database
 pymongo
 sqlalchemy
-
-# Utilities
 python-dotenv
 joblib
 requests
-
-# Notebook Support
 ipykernel
 notebook
 jupyter
