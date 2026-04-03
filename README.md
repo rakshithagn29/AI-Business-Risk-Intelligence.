@@ -38,8 +38,7 @@ and churn BEFORE it happens!
 4. Install: pip install -r requirements.txt
 5. Run: streamlit run dashboard/app.py
 
-## 👩‍💻 Developer
-**Rakshitha** — Final Year CSE Student, JVIT Bengaluru
+
 
 
 # 🚀 AI Driven Business Risk Intelligence
@@ -78,6 +77,3 @@ and churn BEFORE it happens using advanced ML models.
 5. Run dashboard: streamlit run dashboard/app.py
 
 
-
-### 👩‍💻 Developer
-Rakshitha — Final Year CSE Student

@@ -83,7 +83,7 @@ page = st.sidebar.radio(
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("**Project:** AI Driven Business Risk Intelligence")
-st.sidebar.markdown("**Developer:** Rakshitha")
+
 st.sidebar.markdown("**Version:** 1.0.0")
 
 # Load everything
