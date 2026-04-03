@@ -9,8 +9,7 @@ __pycache__/
 # Environment variables
 .env
 
-# Trained models
-models_saved/
+
 
 # Raw data (too large for GitHub)
 data/raw/
