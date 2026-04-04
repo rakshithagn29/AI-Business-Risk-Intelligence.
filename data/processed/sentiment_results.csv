@@ -1,0 +1,21 @@
+customer_id,feedback,sentiment,sentiment_score,sentiment_risk
+0,The service is excellent and very reliable,Positive,0.572,0.0
+1,Very disappointed with the billing issues,Negative,-0.526,52.6
+2,Good network coverage but expensive,Positive,0.238,0.0
+3,Worst customer service I have ever experienced,Negative,-0.625,62.5
+4,Happy with the service overall,Positive,0.572,0.0
+5,Internet speed is very slow and unreliable,Neutral,0.0,25.0
+6,Great value for money and good support,Positive,0.902,0.0
+7,Constantly facing network outages,Neutral,0.0,25.0
+8,Satisfied with the current plan,Positive,0.421,0.0
+9,The charges are too high for poor service,Negative,-0.637,63.7
+10,Amazing service highly recommend,Positive,0.764,0.0
+11,Very bad experience with customer care,Negative,-0.151,15.1
+12,Decent service nothing special,Negative,-0.309,30.9
+13,Excellent support team very helpful,Positive,0.859,0.0
+14,Thinking of switching to another provider,Neutral,0.0,25.0
+15,Signal drops frequently very frustrating,Negative,-0.493,49.3
+16,Best telecom service in the area,Positive,0.637,0.0
+17,Bill was incorrect multiple times,Neutral,0.0,25.0
+18,Happy customer for 5 years,Positive,0.572,0.0
+19,Planning to cancel subscription soon,Negative,-0.25,25.0

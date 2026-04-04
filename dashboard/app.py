@@ -60,6 +60,7 @@ page = st.sidebar.radio(
     ["🏠 Home Dashboard",
      "⚠️ Risk Assessment",
      "🔮 Churn Prediction",
+     "💬 Sentiment Analysis",
      "🎮 What-If Simulator",
      "💰 Revenue Impact"]
 )
@@ -462,6 +463,138 @@ elif page == "🎮 What-If Simulator":
             st.success(f"✅ RECOMMENDED: Take this action! Saves ₹{saved:.0f} annually!")
         else:
             st.error(f"❌ NOT RECOMMENDED: Action costs more than revenue!")
+            # ============================================================
+# PAGE 4 — SENTIMENT ANALYSIS
+# ============================================================
+elif page == "💬 Sentiment Analysis":
+
+    st.title("💬 Customer Sentiment Analysis")
+    st.markdown("Analyze customer feedback and detect sentiment risk")
+    st.markdown("---")
+
+    # Load sentiment data
+    sentiment_path = os.path.join(
+        BASE, "data", "processed", "sentiment_results.csv"
+    )
+
+    if os.path.exists(sentiment_path):
+        sent_df = pd.read_csv(sentiment_path)
+    else:
+        st.warning("⚠️ Run notebook 07 first to generate sentiment data!")
+        st.stop()
+
+    # KPI Cards
+    total = len(sent_df)
+    positive = len(sent_df[sent_df['sentiment'] == 'Positive'])
+    negative = len(sent_df[sent_df['sentiment'] == 'Negative'])
+    neutral = len(sent_df[sent_df['sentiment'] == 'Neutral'])
+
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("📝 Total Feedback", total)
+    col2.metric("😊 Positive", f"{positive} ({positive/total*100:.0f}%)")
+    col3.metric("😐 Neutral", f"{neutral} ({neutral/total*100:.0f}%)")
+    col4.metric("😠 Negative", f"{negative} ({negative/total*100:.0f}%)")
+
+    st.markdown("---")
+
+    col5, col6 = st.columns(2)
+
+    with col5:
+        st.subheader("📊 Sentiment Distribution")
+        fig_sent_pie = px.pie(
+            sent_df,
+            names='sentiment',
+            color='sentiment',
+            color_discrete_map={
+                'Positive': '#00CC00',
+                'Neutral': '#FFB300',
+                'Negative': '#FF0000'
+            },
+            hole=0.4
+        )
+        st.plotly_chart(fig_sent_pie,
+                        use_container_width=True,
+                        key="sent_pie")
+
+    with col6:
+        st.subheader("📈 Sentiment Score Distribution")
+        fig_sent_hist = px.histogram(
+            sent_df,
+            x='sentiment_score',
+            nbins=20,
+            color='sentiment',
+            color_discrete_map={
+                'Positive': '#00CC00',
+                'Neutral': '#FFB300',
+                'Negative': '#FF0000'
+            },
+            title="Sentiment Scores (-1 Negative to +1 Positive)"
+        )
+        fig_sent_hist.add_vline(
+            x=0, line_dash="dash",
+            line_color="white",
+            annotation_text="Neutral"
+        )
+        st.plotly_chart(fig_sent_hist,
+                        use_container_width=True,
+                        key="sent_hist")
+
+    st.markdown("---")
+
+    # Sentiment Risk Chart
+    st.subheader("⚠️ Sentiment Risk by Customer")
+    fig_risk = px.bar(
+        sent_df.sort_values('sentiment_risk', ascending=False),
+        x='customer_id',
+        y='sentiment_risk',
+        color='sentiment',
+        color_discrete_map={
+            'Positive': '#00CC00',
+            'Neutral': '#FFB300',
+            'Negative': '#FF0000'
+        },
+        title="Customer Sentiment Risk Score",
+        labels={
+            'customer_id': 'Customer ID',
+            'sentiment_risk': 'Risk Score (%)'
+        }
+    )
+    st.plotly_chart(fig_risk, use_container_width=True, key="sent_risk")
+
+    st.markdown("---")
+
+    # Feedback filter
+    st.subheader("🔍 Filter Feedback by Sentiment")
+    filter_sent = st.selectbox(
+        "Show feedback",
+        ["All", "Positive 😊", "Neutral 😐", "Negative 😠"]
+    )
+
+    filtered_sent = sent_df.copy()
+    if filter_sent == "Positive 😊":
+        filtered_sent = sent_df[sent_df['sentiment'] == 'Positive']
+    elif filter_sent == "Neutral 😐":
+        filtered_sent = sent_df[sent_df['sentiment'] == 'Neutral']
+    elif filter_sent == "Negative 😠":
+        filtered_sent = sent_df[sent_df['sentiment'] == 'Negative']
+
+    st.dataframe(
+        filtered_sent[['customer_id', 'feedback',
+                       'sentiment', 'sentiment_score',
+                       'sentiment_risk']],
+        use_container_width=True
+    )
+
+    st.markdown("---")
+
+    # High risk alert
+    high_risk_sent = sent_df[sent_df['sentiment_risk'] >= 50]
+    if len(high_risk_sent) > 0:
+        st.error(f"🔴 {len(high_risk_sent)} customers have HIGH sentiment risk — immediate attention needed!")
+        st.dataframe(
+            high_risk_sent[['customer_id', 'feedback', 'sentiment_risk']],
+            use_container_width=True
+        )
 
 # ============================================================
 # PAGE 5 — REVENUE IMPACT
