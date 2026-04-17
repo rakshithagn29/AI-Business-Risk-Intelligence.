@@ -9,6 +9,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 st.set_page_config(
+    
     page_title="AI Business Risk Intelligence",
     page_icon="🚨",
     layout="wide",
@@ -38,8 +39,10 @@ st.markdown("""
 
 @st.cache_data
 def load_data():
-    path = os.path.join(BASE, "data", "processed", "telco_with_predictions.csv")
-    return pd.read_csv(path)
+    with st.spinner("Loading data..."):
+        path = os.path.join(BASE, "data", "processed",
+                           "telco_with_predictions.csv")
+        return pd.read_csv(path)
 
 @st.cache_resource
 def load_models():
@@ -702,3 +705,12 @@ elif page == "💰 Revenue Impact":
     })
 
     st.dataframe(action_plan, use_container_width=True)
+    # Footer shown on all pages
+st.markdown("---")
+st.markdown("""
+<div style='text-align: center; color: gray; font-size: 0.8rem;'>
+    🚨 SENTINEL AI — AI Driven Business Risk Intelligence Platform |
+    Built with Python + XGBoost + Streamlit |
+    Final Year Project — JVIT Bengaluru
+</div>
+""", unsafe_allow_html=True)
