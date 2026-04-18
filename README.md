@@ -2,7 +2,7 @@
 ## Customer Risk Assessment & Churn Prediction
 
 ## 🔴 LIVE DEMO
-## 👉 [Click here to view live dashboard](YOUR_STREAMLIT_URL_HERE)
+## 👉 [Click here to view live dashboard](https://ai-business-risk-intelligence.streamlit.app)
 
 ---
 
