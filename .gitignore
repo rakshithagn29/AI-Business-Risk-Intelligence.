@@ -18,4 +18,10 @@ data/raw/
 .ipynb_checkpoints/
 
 # VS Code settings
-.vscode/
+.vscode/'nAI-Business-Risk-Intelligence.zip
+
+venv/
+models_saved/
+*.zip
+*.pkl
+*.h5
