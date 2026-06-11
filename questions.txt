@@ -1,0 +1,78 @@
+==============================
+SENTINEL AI — DEMO SCRIPT
+==============================
+
+[OPENING — 30 seconds]
+"Good morning/afternoon everyone.
+Every year Indian businesses lose over 50,000 crores
+because they find out a customer is leaving
+AFTER they have already left.
+We built SENTINEL AI to solve this problem."
+
+[SHOW HOME DASHBOARD — 45 seconds]
+"This is our live dashboard.
+Right now it shows 7,043 customers.
+952 of them are in CRITICAL risk — they will leave soon.
+The total revenue at risk is ₹17 lakhs per year.
+All of this updates in real time."
+
+[SHOW RISK ASSESSMENT — 30 seconds]
+"On this page I can filter customers by risk level.
+Watch — I select Critical Risk —
+these are the customers needing immediate action today."
+
+[SHOW CHURN PREDICTION — 30 seconds]
+"Our AI predicts churn across THREE time horizons —
+30 days, 60 days, and 90 days.
+This gives businesses time to act EARLY."
+
+[SHOW WHAT-IF SIMULATOR — 60 seconds — MOST IMPORTANT!]
+"This is our biggest innovation — the What-If Simulator.
+Watch what happens when I select Customer 4453 —
+currently 98.7% churn probability — CRITICAL.
+Now I simulate giving them a 20% discount.
+WATCH — churn drops to 80.7%!
+That's an 18% reduction!
+And it saves ₹38,400 in annual revenue.
+No other tool in the market does this."
+
+[SHOW REVENUE IMPACT — 30 seconds]
+"Finally — our Revenue at Risk calculator.
+If we retain just 80% of high risk customers —
+we save ₹14 lakhs per year.
+This is the direct business impact of our AI."
+
+[CLOSING — 30 seconds]
+"To summarize —
+SENTINEL AI is not just a student project.
+It is a real deployable product with 7 unique innovations
+that saves businesses lakhs in revenue.
+It is free, open source, and available live right now.
+Thank you!"
+
+==============================
+TOTAL TIME: ~4.5 minutes
+==============================
+
+
+
+Step 13 — Practice Judge Questions
+Ask yourself these and practice answering:
+Q1: What is unique about your project?
+"Triple horizon churn prediction, What-If simulator
+showing exact rupee impact, and the combination of
+risk scoring with sentiment analysis —
+none of these exist together in any free tool."
+Q2: What is your accuracy?
+"77.86% accuracy with 82.69% AUC-ROC score.
+Industry standard for excellent models is above 80% AUC
+and we exceed that in all 3 models."
+Q3: What data did you use?
+"Telco Customer Churn dataset from Kaggle
+with 7,043 real customer records."
+Q4: Can this work for other industries?
+"Yes — we designed it with an industry adapter.
+The same platform works for banking, e-commerce,
+and SaaS with just a dataset change."
+Q5: How long did it take?
+"10 weeks of focused development, built solo."

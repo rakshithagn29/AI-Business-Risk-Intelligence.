@@ -65,7 +65,10 @@ page = st.sidebar.radio(
      "🔮 Churn Prediction",
      "💬 Sentiment Analysis",
      "🎮 What-If Simulator",
-     "💰 Revenue Impact"]
+     "💰 Revenue Impact",
+     "📉 LTV Decay Analysis",
+     "⚡ Churn Velocity Index"]
+
 )
 
 st.sidebar.markdown("---")
@@ -705,6 +708,317 @@ elif page == "💰 Revenue Impact":
     })
 
     st.dataframe(action_plan, use_container_width=True)
+    # ============================================================
+# PAGE 7 — LTV DECAY ANALYSIS
+# ============================================================
+elif page == "📉 LTV Decay Analysis":
+
+    st.title("📉 Customer Lifetime Value Decay")
+    st.markdown(
+        "**Core Innovation** — Predict HOW FAST "
+        "customer value decays and WHEN to intervene!")
+    st.markdown("---")
+
+    import sys
+    sys.path.append(BASE)
+    from src.models.ltv_decay_predictor import (
+        calculate_customer_ltv,
+        calculate_intervention_roi)
+
+    decay_path = os.path.join(
+        BASE, "data", "processed",
+        "ltv_decay_portfolio.csv")
+
+    if os.path.exists(decay_path):
+        portfolio = pd.read_csv(decay_path)
+    else:
+        st.warning("Run notebook 12 first!")
+        st.stop()
+
+    # KPIs
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("💰 Total Portfolio LTV",
+                f"₹{portfolio['current_ltv'].sum():,.0f}")
+    col2.metric("⚠️ Total Value at Risk",
+                f"₹{portfolio['value_at_risk'].sum():,.0f}")
+    col3.metric("🔴 Critical Decay",
+                len(portfolio[
+                    portfolio['urgency']=='Critical']))
+    col4.metric("📊 Avg Decay Rate",
+                f"{portfolio['decay_rate_pct'].mean():.1f}%")
+
+    st.markdown("---")
+    st.info("""
+    **What is LTV Decay?**
+    Traditional tools say: "Customer will churn — 84%"
+    SENTINEL AI shows: "Customer value will drop from
+    ₹780 → ₹0 in 4 months. Act in Month 1 for 233% ROI!"
+    No existing paper or tool does this!
+    """)
+    st.markdown("---")
+
+    st.subheader("🔍 Individual Customer LTV Decay")
+    col5, col6 = st.columns(2)
+    with col5:
+        cust_id = st.number_input(
+            "Customer ID",
+            min_value=0,
+            max_value=len(df)-1,
+            value=int(df['churn_prob_30day'].idxmax()))
+    with col6:
+        action = st.selectbox(
+            "Intervention Action",
+            ['discount_10','discount_20','discount_30',
+             'upgrade','support','loyalty','all'])
+
+    if st.button("📉 Analyze LTV Decay"):
+        row     = df.iloc[cust_id]
+        monthly = float(row.get('MonthlyCharges', 65))
+        tenure  = float(row.get('tenure', 12))
+        c30     = float(row['churn_prob_30day'])
+        c60     = float(row['churn_prob_60day'])
+        c90     = float(row['churn_prob_90day'])
+
+        ltv = calculate_customer_ltv(
+            monthly, tenure, c30, c60, c90)
+        roi = calculate_intervention_roi(
+            ltv, action, monthly)
+
+        col7, col8, col9 = st.columns(3)
+        col7.metric("Current LTV",
+                    f"₹{ltv['current_ltv']:,.0f}/yr")
+        col8.metric("Value at Risk",
+                    f"₹{ltv['value_at_risk']:,.0f}",
+                    f"{ltv['decay_rate_pct']:.1f}% decay")
+        col9.metric("Act by Month",
+                    f"Month {ltv['intervention_month']}",
+                    ltv['decay_pattern'])
+
+        st.markdown("---")
+
+        fig_d = go.Figure()
+        fig_d.add_trace(go.Scatter(
+            x=ltv['months'],
+            y=ltv['decay_curve'],
+            mode='lines+markers',
+            name='LTV Projection',
+            line=dict(color='red', width=3),
+            fill='tozeroy',
+            fillcolor='rgba(255,0,0,0.1)'))
+        fig_d.add_vline(
+            x=ltv['intervention_month'],
+            line_dash="dash", line_color="green",
+            annotation_text=
+            f"Best Time: Month {ltv['intervention_month']}")
+        fig_d.update_layout(
+            title=f"Customer {cust_id} — LTV Decay",
+            xaxis_title="Months from Today",
+            yaxis_title="LTV (₹/year)",
+            height=380)
+        st.plotly_chart(fig_d,
+                        use_container_width=True,
+                        key="ltv_curve")
+
+        if roi['net_roi'] > 0:
+            st.success(f"""
+✅ **TAKE THIS ACTION!**
+Cost: ₹{roi['action_cost']:,.0f} |
+Saves: ₹{roi['value_saved']:,.0f} |
+**Net ROI: ₹{roi['net_roi']:,.0f} ({roi['roi_percentage']:.0f}%)**
+            """)
+        else:
+            st.warning("Try a cheaper action!")
+
+    st.markdown("---")
+    st.subheader("🔴 Top 10 Fastest Decaying Customers")
+    top = portfolio.nlargest(10, 'decay_rate_pct')[
+        ['customer_id','current_ltv','value_at_risk',
+         'decay_rate_pct','urgency',
+         'intervention_month']
+    ].reset_index(drop=True)
+    st.dataframe(top, use_container_width=True)
+
+
+# ============================================================
+# PAGE 8 — CHURN VELOCITY INDEX
+# ============================================================
+elif page == "⚡ Churn Velocity Index":
+
+    st.title("⚡ Churn Velocity Index (CVI)")
+    st.markdown(
+        "**Core Innovation** — Not just WILL they leave "
+        "but HOW FAST are they moving toward leaving!")
+    st.markdown("---")
+
+    import sys
+    sys.path.append(BASE)
+    from src.models.churn_velocity import (
+        add_cvi_to_dataframe,
+        find_dangerous_combinations,
+        calculate_churn_velocity)
+
+    cvi_path = os.path.join(
+        BASE, "data", "processed",
+        "telco_with_cvi.csv")
+
+    if os.path.exists(cvi_path):
+        df_cvi = pd.read_csv(cvi_path)
+    else:
+        with st.spinner("Calculating CVI..."):
+            df_cvi = add_cvi_to_dataframe(df)
+            df_cvi.to_csv(cvi_path, index=False)
+
+    total        = len(df_cvi)
+    critical_vel = len(df_cvi[df_cvi['cvi'] >= 8])
+    high_vel     = len(df_cvi[
+        (df_cvi['cvi'] >= 6) &
+        (df_cvi['cvi'] < 8)])
+    accelerating = len(df_cvi[
+        df_cvi['is_accelerating'] == True])
+
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("⚡ Avg CVI",
+                f"{df_cvi['cvi'].mean():.1f}/10")
+    col2.metric("🔴 Critical Velocity",
+                f"{critical_vel:,}",
+                f"{critical_vel/total*100:.1f}%")
+    col3.metric("🟠 High Velocity",
+                f"{high_vel:,}")
+    col4.metric("📈 Accelerating",
+                f"{accelerating:,}")
+
+    st.markdown("---")
+    st.info("""
+    **What is Churn Velocity Index?**
+    Two customers both at 70% churn risk.
+    Customer A: Moving SLOWLY — was 68% last month.
+    Customer B: Moving FAST — was 50% last month.
+    Traditional tools treat them the same.
+    CVI shows Customer B needs URGENT attention!
+    """)
+    st.markdown("---")
+
+    st.subheader("🔍 Check Individual Customer CVI")
+    cust_id2 = st.number_input(
+        "Customer ID",
+        min_value=0,
+        max_value=len(df)-1,
+        value=int(df['churn_prob_30day'].idxmax()),
+        key="cvi_input")
+
+    if st.button("⚡ Calculate CVI"):
+        row2 = df.iloc[cust_id2]
+        c30  = float(row2['churn_prob_30day'])
+        c60  = float(row2['churn_prob_60day'])
+        c90  = float(row2['churn_prob_90day'])
+        cvi  = calculate_churn_velocity(c30, c60, c90)
+
+        col5, col6, col7 = st.columns(3)
+        col5.metric("⚡ CVI Score",
+                    f"{cvi['cvi']}/10")
+        col6.metric("Category",
+                    cvi['category'].split('—')[0])
+        col7.metric("Urgency",
+                    cvi['urgency'])
+
+        fig_v = go.Figure()
+        fig_v.add_trace(go.Scatter(
+            x=['30-Day','60-Day','90-Day'],
+            y=[c30, c60, c90],
+            mode='lines+markers',
+            line=dict(
+                color='red' if cvi['cvi'] >= 6
+                else 'orange',
+                width=3),
+            marker=dict(size=12)))
+        fig_v.update_layout(
+            title=f"Customer {cust_id2} — "
+                  f"CVI: {cvi['cvi']}/10",
+            xaxis_title="Time Horizon",
+            yaxis_title="Churn Probability (%)",
+            yaxis=dict(range=[0,105]),
+            height=350)
+        st.plotly_chart(fig_v,
+                        use_container_width=True,
+                        key="vel_chart")
+
+        if cvi['is_accelerating']:
+            st.error(
+                f"🚨 ACCELERATING! {cvi['message']} "
+                f"— {cvi['urgency']}")
+        else:
+            st.success(
+                f"✅ STABLE. {cvi['message']}")
+
+    st.markdown("---")
+
+    st.subheader(
+        "📊 2D Risk View — Probability vs Velocity")
+    st.markdown(
+        "Traditional tools only see X-axis. "
+        "SENTINEL AI shows BOTH dimensions!")
+
+    sample = df_cvi.sample(
+        min(500, len(df_cvi)), random_state=42)
+    fig_2d = px.scatter(
+        sample,
+        x='churn_prob_30day',
+        y='cvi',
+        color='cvi_category',
+        title="Churn Probability vs Velocity Index",
+        labels={
+            'churn_prob_30day': 'Churn Probability (%)',
+            'cvi': 'CVI Score (0-10)'},
+        opacity=0.6)
+    fig_2d.add_hline(
+        y=6, line_dash="dash",
+        line_color="red",
+        annotation_text="High Velocity")
+    fig_2d.add_vline(
+        x=60, line_dash="dash",
+        line_color="red",
+        annotation_text="High Risk")
+    fig_2d.add_annotation(
+        x=80, y=9, text="⚠️ DANGER ZONE",
+        showarrow=False,
+        font=dict(color="red", size=12))
+    fig_2d.add_annotation(
+        x=15, y=9, text="🔍 HIDDEN DANGER",
+        showarrow=False,
+        font=dict(color="orange", size=12))
+    st.plotly_chart(fig_2d,
+                    use_container_width=True,
+                    key="cvi_2d")
+
+    st.markdown("---")
+
+    st.subheader("🔍 Hidden Danger Customers")
+    st.warning(
+        "These look safe by traditional methods "
+        "but are accelerating toward churn fast!")
+
+    hidden = df_cvi[
+        (df_cvi['churn_prob_30day'] < 60) &
+        (df_cvi['cvi'] >= 7)
+    ].head(10)
+
+    if len(hidden) > 0:
+        st.dataframe(
+            hidden[['churn_prob_30day','cvi',
+                    'cvi_category',
+                    'cvi_urgency']].reset_index(),
+            use_container_width=True)
+    else:
+        st.success("No hidden danger customers!")
+
+    st.markdown("---")
+
+    st.subheader("⚡ Top 10 Highest Velocity Customers")
+    top_v = df_cvi.nlargest(10, 'cvi')[
+        ['churn_prob_30day','cvi','cvi_category',
+         'cvi_urgency','is_accelerating']
+    ].reset_index()
+    st.dataframe(top_v, use_container_width=True)
     # Footer shown on all pages
 st.markdown("---")
 st.markdown("""
