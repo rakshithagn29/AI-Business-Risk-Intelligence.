@@ -9,7 +9,6 @@ import warnings
 warnings.filterwarnings('ignore')
 # Auto train models if not found
 import os
-BASE = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE, "models_saved")
 os.makedirs(MODEL_PATH, exist_ok=True)
 
@@ -36,7 +35,7 @@ def ensure_models_exist():
 
         df_train = pd.read_csv(
             os.path.join(BASE, "data", "processed",
-                        "telco_with_cvi.csv"))
+                        "telco_clean.csv"))
 
         le = LabelEncoder()
         df_work = df_train.copy()
