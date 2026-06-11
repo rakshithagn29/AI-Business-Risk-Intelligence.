@@ -8,7 +8,9 @@ import os
 import warnings
 warnings.filterwarnings('ignore')
 # Auto train models if not found
+# Auto train models if not found
 import os
+BASE = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE, "models_saved")
 os.makedirs(MODEL_PATH, exist_ok=True)
 
@@ -81,6 +83,7 @@ def ensure_models_exist():
         st.rerun()
 
 ensure_models_exist()
+
 st.set_page_config(
     
     page_title="AI Business Risk Intelligence",
