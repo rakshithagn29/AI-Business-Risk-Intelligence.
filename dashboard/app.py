@@ -7,7 +7,80 @@ import joblib
 import os
 import warnings
 warnings.filterwarnings('ignore')
+# Auto train models if not found
+import os
+MODEL_PATH = os.path.join(BASE, "models_saved")
+os.makedirs(MODEL_PATH, exist_ok=True)
 
+def ensure_models_exist():
+    """Train models if pkl files not found"""
+    required = ['churn_30day.pkl', 'churn_60day.pkl',
+                'churn_90day.pkl', 'scaler.pkl']
+    missing = [f for f in required
+               if not os.path.exists(
+                   os.path.join(MODEL_PATH, f))]
+    
+    if missing:
+        st.warning("⏳ Training models first time — please wait 2 minutes...")
+        import subprocess
+        # Train models using existing notebook code inline
+        from sklearn.preprocessing import (
+            LabelEncoder, StandardScaler)
+        from sklearn.model_selection import train_test_split
+        from imblearn.over_sampling import SMOTE
+        import xgboost as xgb
+        import joblib
+        import pandas as pd
+        import numpy as np
+
+        df_train = pd.read_csv(
+            os.path.join(BASE, "data", "processed",
+                        "telco_clean.csv"))
+
+        le = LabelEncoder()
+        df_work = df_train.copy()
+        cat_cols = df_work.select_dtypes(
+            include=['object']).columns
+        for col in cat_cols:
+            df_work[col] = le.fit_transform(
+                df_work[col].astype(str))
+
+        X = df_work.drop('Churn', axis=1)
+        y = df_work['Churn']
+
+        scaler = StandardScaler()
+        X_scaled = pd.DataFrame(
+            scaler.fit_transform(X), columns=X.columns)
+        joblib.dump(scaler,
+                    os.path.join(MODEL_PATH, "scaler.pkl"))
+
+        X_train, X_test, y_train, y_test = (
+            train_test_split(
+                X_scaled, y, test_size=0.2,
+                random_state=42, stratify=y))
+
+        sm = SMOTE(random_state=42)
+        X_sm, y_sm = sm.fit_resample(X_train, y_train)
+
+        for name, noise in [('churn_30day', 0),
+                             ('churn_60day', 0.05),
+                             ('churn_90day', 0.08)]:
+            X_tr = (X_sm + np.random.normal(
+                0, noise, X_sm.shape)
+                if noise > 0 else X_sm)
+            model = xgb.XGBClassifier(
+                n_estimators=200, max_depth=6,
+                learning_rate=0.1, random_state=42,
+                n_jobs=-1, verbosity=0,
+                eval_metric='logloss')
+            model.fit(X_tr, y_sm)
+            joblib.dump(model, os.path.join(
+                MODEL_PATH, f"{name}.pkl"))
+
+        st.success("✅ Models trained! Reloading...")
+        st.rerun()
+
+ensure_models_exist()
 st.set_page_config(
     
     page_title="AI Business Risk Intelligence",
