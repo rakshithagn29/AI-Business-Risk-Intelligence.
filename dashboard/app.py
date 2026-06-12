@@ -275,6 +275,74 @@ if page == "🏠 Home Dashboard":
 # PAGE 2 — RISK ASSESSMENT
 # ============================================================
 elif page == "⚠️ Risk Assessment":
+    st.markdown("---")
+    st.subheader("🧠 Why Is This Customer Risky? (AI Explanation)")
+
+    explain_cust = st.number_input(
+        "Customer ID for explanation",
+        min_value=0, max_value=len(df)-1,
+        value=int(df['churn_prob_30day'].idxmax()),
+        key="shap_cust")
+
+    if st.button("🔍 Explain This Customer's Risk"):
+        import shap
+
+        feature_cols = [c for c in df.columns
+                        if c not in ['churn_prob_30day',
+                                     'churn_prob_60day',
+                                     'churn_prob_90day',
+                                     'churn_risk', 'Churn']]
+
+        X_row = df.iloc[[explain_cust]][feature_cols]
+        X_row_num = X_row.select_dtypes(
+            include=['int64','float64'])
+
+        try:
+            explainer = shap.TreeExplainer(m30)
+            scaled_row = scaler.transform(
+                X_row_num.reindex(
+                    columns=scaler.feature_names_in_,
+                    fill_value=0))
+            shap_values = explainer.shap_values(scaled_row)
+
+            if isinstance(shap_values, list):
+                shap_values = shap_values[1]
+
+            shap_df = pd.DataFrame({
+                'Feature': scaler.feature_names_in_,
+                'Impact': shap_values[0]
+            }).sort_values('Impact', key=abs,
+                          ascending=False).head(5)
+
+            shap_df['Direction'] = shap_df['Impact'].apply(
+                lambda x: '🔺 Increases Risk'
+                if x > 0 else '🔻 Decreases Risk')
+            shap_df['Impact %'] = (
+                shap_df['Impact'].abs() /
+                shap_df['Impact'].abs().sum() * 100
+            ).round(1)
+
+            st.success(
+                f"**Top factors for Customer {explain_cust}:**")
+
+            for _, row in shap_df.iterrows():
+                st.write(
+                    f"- **{row['Feature']}**: "
+                    f"{row['Direction']} "
+                    f"({row['Impact %']}% influence)")
+
+            fig_shap = px.bar(
+                shap_df, x='Impact', y='Feature',
+                color='Impact',
+                color_continuous_scale=['green','red'],
+                orientation='h',
+                title="Feature Impact on Risk Score")
+            st.plotly_chart(fig_shap,
+                use_container_width=True, key="shap_chart")
+
+        except Exception as e:
+            st.warning(
+                f"⚠️ Could not generate explanation: {e}")
 
     st.title("⚠️ Customer Risk Assessment")
     st.markdown("---")
