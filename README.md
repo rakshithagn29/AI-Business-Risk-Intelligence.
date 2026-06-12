@@ -64,10 +64,11 @@ and churn BEFORE it happens using advanced ML models.
 ### 🛠️ Tech Stack
 - Python 3.14
 - XGBoost, Random Forest, Scikit-learn
-- SHAP, LIME
+- SHAP, SMOTE, 
 - FastAPI, Streamlit
-- MongoDB, PostgreSQL
-- Docker, AWS
+- VADER,Plotly,Streamlit Cloud
+
+
 
 ### 🚀 How to Run
 1. Clone this repository
