@@ -434,86 +434,99 @@ elif page == "🔮 Churn Prediction":
 # ============================================================
 # PAGE 4 — SENTIMENT ANALYSIS
 # ============================================================
-elif page == "💬 Sentiment Analysis":
+elif page == "💬 Real-Time Sentiment":
 
-    st.title("💬 Customer Sentiment Analysis")
+    st.title("💬 Real-Time Customer Sentiment")
+    st.markdown(
+        "**Live data** collected from NewsAPI — "
+        "real news about Indian telecom operators")
     st.markdown("---")
 
-    sent_path = os.path.join(
-        BASE, "data", "processed",
-        "sentiment_results.csv")
+    live_path = os.path.join(
+        BASE, "data", "external", "live_news_data.csv")
+    summary_path = os.path.join(
+        BASE, "data", "external", "live_data_summary.json")
 
-    if os.path.exists(sent_path):
-        sent_df = pd.read_csv(sent_path)
+    if os.path.exists(live_path):
+        live_df = pd.read_csv(live_path)
+
+        import json
+        with open(summary_path) as f:
+            summary = json.load(f)
+
+        st.success(
+            f"✅ Live data collected: {summary['collection_time']} "
+            f"| Source: {summary['data_source']}")
+
+        col1, col2, col3, col4 = st.columns(4)
+        col1.metric("📰 Articles Analyzed",
+                    summary['total_articles'])
+        col2.metric("😊 Positive",
+                    summary['positive'])
+        col3.metric("😠 Negative",
+                    summary['negative'])
+        col4.metric("🎯 Churn Signal Rate",
+                    f"{summary['churn_signal_rate']}%")
+
+        st.markdown("---")
+
+        col5, col6 = st.columns(2)
+        with col5:
+            fig_p = px.pie(
+                live_df, names='sentiment',
+                color='sentiment',
+                color_discrete_map={
+                    'Positive':'#00CC00',
+                    'Neutral':'#FFB300',
+                    'Negative':'#FF0000'},
+                title="Live Sentiment Distribution")
+            st.plotly_chart(fig_p,
+                use_container_width=True, key="live_pie")
+
+        with col6:
+            sub_sent = live_df.groupby(
+                ['query','sentiment']).size().reset_index(
+                    name='count')
+            fig_s = px.bar(
+                sub_sent, x='query', y='count',
+                color='sentiment',
+                color_discrete_map={
+                    'Positive':'#00CC00',
+                    'Neutral':'#FFB300',
+                    'Negative':'#FF0000'},
+                title="Sentiment by Search Query")
+            fig_s.update_xaxes(tickangle=45)
+            st.plotly_chart(fig_s,
+                use_container_width=True, key="live_query")
+
+        st.markdown("---")
+        st.subheader("🔴 Articles with Churn Signals")
+        churn_posts = live_df[
+            live_df['churn_signal'] == True
+        ][['publisher','title','sentiment',
+           'sentiment_risk','url']].head(10)
+
+        if len(churn_posts) > 0:
+            st.dataframe(churn_posts,
+                use_container_width=True)
+        else:
+            st.info("No churn signals in current data")
+
+        st.markdown("---")
+        st.caption(
+            f"Data refreshed: {summary['collection_time']} | "
+            f"Run notebook 14 to refresh live data")
+
     else:
         st.warning(
-            "⚠️ Run notebook 07_sentiment_analysis first!")
-        st.stop()
-
-    total    = len(sent_df)
-    positive = len(sent_df[sent_df['sentiment']=='Positive'])
-    negative = len(sent_df[sent_df['sentiment']=='Negative'])
-    neutral  = len(sent_df[sent_df['sentiment']=='Neutral'])
-
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("📝 Total",    total)
-    col2.metric("😊 Positive", f"{positive} ({positive/total*100:.0f}%)")
-    col3.metric("😐 Neutral",  f"{neutral}  ({neutral/total*100:.0f}%)")
-    col4.metric("😠 Negative", f"{negative} ({negative/total*100:.0f}%)")
-
-    st.markdown("---")
-
-    col5, col6 = st.columns(2)
-    with col5:
-        fig_sp = px.pie(
-            sent_df, names='sentiment',
-            color='sentiment',
-            color_discrete_map={
-                'Positive': '#00CC00',
-                'Neutral':  '#FFB300',
-                'Negative': '#FF0000'},
-            hole=0.4,
-            title="Sentiment Distribution")
-        st.plotly_chart(fig_sp,
-                        use_container_width=True,
-                        key="sent_pie")
-    with col6:
-        fig_sh = px.histogram(
-            sent_df, x='sentiment_score',
-            nbins=20, color='sentiment',
-            color_discrete_map={
-                'Positive': '#00CC00',
-                'Neutral':  '#FFB300',
-                'Negative': '#FF0000'},
-            title="Sentiment Score Distribution")
-        st.plotly_chart(fig_sh,
-                        use_container_width=True,
-                        key="sent_hist")
-
-    st.markdown("---")
-
-    filter_s = st.selectbox(
-        "Filter Feedback",
-        ["All", "Positive 😊",
-         "Neutral 😐", "Negative 😠"])
-
-    filtered_s = sent_df.copy()
-    if filter_s == "Positive 😊":
-        filtered_s = sent_df[
-            sent_df['sentiment']=='Positive']
-    elif filter_s == "Neutral 😐":
-        filtered_s = sent_df[
-            sent_df['sentiment']=='Neutral']
-    elif filter_s == "Negative 😠":
-        filtered_s = sent_df[
-            sent_df['sentiment']=='Negative']
-
-    st.dataframe(
-        filtered_s[['customer_id','feedback',
-                    'sentiment','sentiment_score',
-                    'sentiment_risk']],
-        use_container_width=True)
-
+            "⚠️ Run notebook 14_real_live_data.ipynb "
+            "to collect live data from NewsAPI!")
+        st.info("""
+        This page shows REAL-TIME data collected from
+        NewsAPI about Indian telecom operators
+        (Jio, Airtel, Vi, BSNL) — genuine live news
+        sentiment, not synthetic data.
+        """)
 # ============================================================
 # PAGE 5 — WHAT-IF SIMULATOR
 # ============================================================

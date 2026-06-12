@@ -1,0 +1,10 @@
+{
+  "collection_time": "2026-06-12 10:02:28",
+  "total_articles": 71,
+  "positive": 48,
+  "negative": 15,
+  "neutral": 8,
+  "churn_signal_rate": 18.3,
+  "data_source": "NewsAPI (live)",
+  "queries": "Jio, Airtel, Vi, BSNL, telecom complaint/churn India"
+}
