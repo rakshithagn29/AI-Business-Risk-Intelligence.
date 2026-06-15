@@ -1,5 +1,6 @@
 # 🚨 AI Driven Business Risk Intelligence
 ## Customer Risk Assessment & Churn Prediction
+Built an AI-powered customer intelligence platform that predicts churn across 30/60/90-day horizons, generates explainable risk scores using SHAP, quantifies revenue at risk, and simulates retention strategies through a what-if analysis engine.
 
 ## 🔴 LIVE DEMO
 ## 👉 [Click here to view live dashboard](https://ai-business-risk-intelligence.streamlit.app)
